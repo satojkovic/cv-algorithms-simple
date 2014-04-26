@@ -25,18 +25,33 @@ import numpy as np
 
 
 class CCV(object):
+
     def __init__(self, image_file):
         self._im = Image.open(image_file)
-        self._ccv = []
 
     def extract(self):
-        self._blurred_im = self._im.filter(ImageFilter.BLUR)
-        self._ccv
+        self.blur()
+
+    def blur(self):
+        w, h = self._im.size
+        for y in xrange(1, h-1):
+            for x in xrange(1, w-1):
+                adj_pixels = [self._im.getpixel((i, j))
+                              for i in xrange(x-1, x+2)
+                              for j in xrange(y-1, y+2)]
+
+                # replace pixel value
+                self._im.putpixel((x, y),
+                                  tuple(
+                                      map(int,
+                                          np.mean(adj_pixels, 0).tolist()
+                                          )
+                                  ))
 
 
 def main():
     ccv = CCV('snow_leopard.jpg')
-    print ccv.extract()
+    ccv.extract()
 
 if __name__ == '__main__':
     main()
