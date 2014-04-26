@@ -25,18 +25,21 @@ import numpy as np
 
 
 class CCV(object):
+    ALL_COLORS = 64
 
     def __init__(self, image_file):
-        self._im = Image.open(image_file)
+        self._im_org = Image.open(image_file)
 
     def extract(self):
         self.blur()
 
     def blur(self):
+        self._im = self._im_org.copy()
         w, h = self._im.size
+
         for y in xrange(1, h-1):
             for x in xrange(1, w-1):
-                adj_pixels = [self._im.getpixel((i, j))
+                adj_pixels = [self._im_org.getpixel((i, j))
                               for i in xrange(x-1, x+2)
                               for j in xrange(y-1, y+2)]
 
