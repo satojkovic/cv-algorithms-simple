@@ -22,23 +22,28 @@
 
 from PIL import Image, ImageFilter
 import numpy as np
+from itertools import product
 
 
 class CCV(object):
-    ALL_COLORS = 64
+    MAX_VALUE_PIXEL = 256
+    NUM_BINS_EACH_COLOR = 4
+    BIN_WIDTH = MAX_VALUE_PIXEL / NUM_BINS_EACH_COLOR
 
     def __init__(self, image_file):
         self._im_org = Image.open(image_file)
+        self._w, self._h = self._im_org.size
+        self._discretized_im = np.zeros((self._h, self._w), dtype=int)
 
     def extract(self):
-        self.blur()
+        self.__blur()
+        self.__discretize_colorspace()
 
-    def blur(self):
+    def __blur(self):
         self._im = self._im_org.copy()
-        w, h = self._im.size
 
-        for y in xrange(1, h-1):
-            for x in xrange(1, w-1):
+        for y in xrange(1, self._h-1):
+            for x in xrange(1, self._w-1):
                 adj_pixels = [self._im_org.getpixel((i, j))
                               for i in xrange(x-1, x+2)
                               for j in xrange(y-1, y+2)]
@@ -50,6 +55,22 @@ class CCV(object):
                                           np.mean(adj_pixels, 0).tolist()
                                           )
                                   ))
+
+    def __discretize_colorspace(self):
+        for y in xrange(self._h):
+            for x in xrange(self._w):
+                # idx = red_i + green_i * 4 + blue_i * 8
+                idx = self.__getidx(x, y, ch=0) + \
+                    self.__getidx(x, y, ch=1) + \
+                    self.__getidx(x, y, ch=2)
+
+                # assign an index of discretized colorspace
+                self._discretized_im[y][x] = idx
+
+    def __getidx(self, x, y, ch=0):
+        idx = self._im.getpixel((x, y))[ch] / self.BIN_WIDTH
+        return idx if ch == 0 \
+            else idx * (self.NUM_BINS_EACH_COLOR ** ch)
 
 
 def main():
