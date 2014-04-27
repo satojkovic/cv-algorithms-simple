@@ -59,7 +59,7 @@ class CCV(object):
     def __discretize_colorspace(self):
         for y in xrange(self._h):
             for x in xrange(self._w):
-                # idx = red_i + green_i * 4 + blue_i * 8
+                # idx = red_i + green_i * 4 + blue_i * 16
                 idx = self.__getidx(x, y, ch=0) + \
                     self.__getidx(x, y, ch=1) + \
                     self.__getidx(x, y, ch=2)
