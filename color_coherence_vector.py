@@ -46,8 +46,6 @@ class CCV(object):
         self.__compute_connected_components()
         self.__gen_ccv_vector()
 
-        return self.ccv_vector
-
     def __blur(self):
         self._im = self._im_org.copy()
 
@@ -151,7 +149,10 @@ def main():
     ccv = CCV('snow_leopard.jpg')
 
     print '=== color coherence vector ==='
-    print ccv.extract()
+    ccv.extract()
+
+    for k, v in sorted(ccv.ccv_vector.items()):
+        print k, v
 
 if __name__ == '__main__':
     main()
