@@ -29,15 +29,18 @@ class CCV(object):
     MAX_VALUE_PIXEL = 256
     NUM_BINS_EACH_COLOR = 4
     BIN_WIDTH = MAX_VALUE_PIXEL / NUM_BINS_EACH_COLOR
+    TAU = 25
 
     def __init__(self, image_file):
         self._im_org = Image.open(image_file)
         self._w, self._h = self._im_org.size
         self._discretized_im = np.zeros((self._h, self._w), dtype=int)
+        self._labeled_im = np.zeros((self._h, self._w), dtype=int)
 
     def extract(self):
         self.__blur()
         self.__discretize_colorspace()
+        self.__compute_connected_components()
 
     def __blur(self):
         self._im = self._im_org.copy()
@@ -57,20 +60,67 @@ class CCV(object):
                                   ))
 
     def __discretize_colorspace(self):
-        for y in xrange(self._h):
-            for x in xrange(self._w):
-                # idx = red_i + green_i * 4 + blue_i * 16
-                idx = self.__getidx(x, y, ch=0) + \
-                    self.__getidx(x, y, ch=1) + \
-                    self.__getidx(x, y, ch=2)
+        for y, x in product(*map(range, (self._h, self._w))):
+            # idx = red_i + green_i * 4 + blue_i * 16
+            idx = self.__getidx(x, y, ch=0) + \
+                  self.__getidx(x, y, ch=1) + \
+                  self.__getidx(x, y, ch=2)
 
-                # assign an index of discretized colorspace
-                self._discretized_im[y][x] = idx
+            # assign an index of discretized colorspace
+            self._discretized_im[y][x] = idx
 
     def __getidx(self, x, y, ch=0):
         idx = self._im.getpixel((x, y))[ch] / self.BIN_WIDTH
         return idx if ch == 0 \
             else idx * (self.NUM_BINS_EACH_COLOR ** ch)
+
+    def __compute_connected_components(self):
+        current_label = 0
+        
+        for y, x in product(*map(range, (self._h, self._w))):
+            checklist, xylist = self.__get_checklist(x, y)
+            current_color = self._discretized_im[y][x]
+            
+            if current_color in checklist:
+                # assign same label from labeled_im
+                idx = checklist.index(current_color)
+                cx, cy = xylist[idx][0], xylist[idx][1]
+                self._labeled_im[y][x] = self._labeled_im[cy][cx]
+            else:
+                # assign new label
+                self._labeled_im[y][x] = current_color
+                current_color += 1
+                
+    def __get_checklist(self, x, y):
+        checklist = []
+        xylist = []
+        
+        if x != 0 and x != self._w-1 and y != 0:
+            checklist.append(self._discretized_im[y-1][x-1])
+            xylist.append([x-1, y-1])
+            checklist.append(self._discretized_im[y-1][x])
+            xylist.append([x, y-1])
+            checklist.append(self._discretized_im[y-1][x+1])
+            xylist.append([x+1, y-1])
+            checklist.append(self._discretized_im[y][x-1])
+            xylist.append([x-1, y])
+        elif x != 0 and y == 0:
+            checklist.append(self._discretized_im[y][x-1])
+            xylist.append([x-1, y])
+        elif x == 0 and y != 0:
+            checklist.append(self._discretized_im[y-1][x])
+            xylist.append([x, y-1])
+            checklist.append(self._discretized_im[y-1][x+1])
+            xylist.append([x+1, y-1])
+        elif x == self._w-1 and y != 0:
+            checklist.append(self._discretized_im[y-1][x-1])
+            xylist.append([x-1, y-1])
+            checklist.append(self._discretized_im[y-1][x])
+            xylist.append([x, y-1])
+            checklist.append(self._discretized_im[y][x-1])
+            xylist.append([x-1, y])
+
+        return checklist, xylist
 
 
 def main():
