@@ -23,6 +23,7 @@
 from PIL import Image, ImageFilter
 import numpy as np
 from itertools import product
+from collections import defaultdict
 
 
 class CCV(object):
@@ -36,11 +37,16 @@ class CCV(object):
         self._w, self._h = self._im_org.size
         self._discretized_im = np.zeros((self._h, self._w), dtype=int)
         self._labeled_im = np.zeros((self._h, self._w), dtype=int)
+        self._label_to_color = defaultdict(list)
+        self.ccv_vector = defaultdict(list)
 
     def extract(self):
         self.__blur()
         self.__discretize_colorspace()
         self.__compute_connected_components()
+        self.__gen_ccv_vector()
+
+        return self.ccv_vector
 
     def __blur(self):
         self._im = self._im_org.copy()
@@ -75,12 +81,12 @@ class CCV(object):
             else idx * (self.NUM_BINS_EACH_COLOR ** ch)
 
     def __compute_connected_components(self):
-        current_label = 0
+        self._current_label = 0
         
         for y, x in product(*map(range, (self._h, self._w))):
             checklist, xylist = self.__get_checklist(x, y)
             current_color = self._discretized_im[y][x]
-            
+
             if current_color in checklist:
                 # assign same label from labeled_im
                 idx = checklist.index(current_color)
@@ -88,8 +94,9 @@ class CCV(object):
                 self._labeled_im[y][x] = self._labeled_im[cy][cx]
             else:
                 # assign new label
-                self._labeled_im[y][x] = current_color
-                current_color += 1
+                self._labeled_im[y][x] = self._current_label
+                self._label_to_color[self._current_label] = current_color
+                self._current_label += 1
                 
     def __get_checklist(self, x, y):
         checklist = []
@@ -122,10 +129,29 @@ class CCV(object):
 
         return checklist, xylist
 
+    def __gen_ccv_vector(self):
+        for label in xrange(self._current_label):
+            s = self._labeled_im[np.where(self._labeled_im == label)].size
+            color = self._label_to_color[label]
+            if s >= self.TAU:
+                # coherent
+                if self.ccv_vector[color]:
+                    self.ccv_vector[color][0] += s
+                else:
+                    self.ccv_vector[color] = list((s, 0))
+            else:
+                # incoherent
+                if self.ccv_vector[color]:
+                    self.ccv_vector[color][1] += s
+                else:
+                    self.ccv_vector[color] = list((0, s))
 
+    
 def main():
     ccv = CCV('snow_leopard.jpg')
-    ccv.extract()
+
+    print '=== color coherence vector ==='
+    print ccv.extract()
 
 if __name__ == '__main__':
     main()
