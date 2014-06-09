@@ -1,14 +1,10 @@
 #-*- coding: utf-8 -*-
 
 import argparse
-import cv2
-import sys
+from PIL import Image
+import leargist
 
 
-def color_gist_scaletab(img, w, n_scale, n_orientation):
-    desc = [0 for i in xrange(960)]
-    return desc
-    
 def main():
     parser = argparse.ArgumentParser(
         description='compute gist descriptor',
@@ -21,31 +17,11 @@ def main():
 
     args = parser.parse_args()
 
-    img = cv2.imread(args.imgfile)
-    if img == None:
-        print 'Could not load image: %s' % args.imgfile
-        sys.exit(-1)
+    im = Image.open(args.imgfile)
+    desc = leargist.color_gist(im)
 
-    nblocks = 4
-    n_scale = 3
-    orientations_per_scale = [0 for i in xrange(50)]
-    orientations_per_scale[0] = 8
-    orientations_per_scale[0] = 8
-    orientations_per_scale[0] = 4
-
-    desc = color_gist_scaletab(img,
-                               nblocks,
-                               n_scale,
-                               orientations_per_scale)
-
-    descsize = 0
-    for i in xrange(n_scale):
-        descsize += nblocks*nblocks*orientations_per_scale[i]
-    descsize *= 3
-
-    for i in xrange(descsize):
-        print "%.4f" % desc[i]
-    print "\n"
+    print desc.shape
+    print desc[:4]
 
 if __name__ == '__main__':
     main()
