@@ -4,5 +4,6 @@ A collection of computer vision algorithms in python.
 
 Algorithms
 ======================
-Under construction
 
+* Color Coherence Vector
+    * http://goo.gl/rup29B
