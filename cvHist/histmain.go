@@ -1,18 +1,20 @@
 package main
 
-import (
-	"log"
-
-	cvhist "./lib"
-	opencv "github.com/lazywei/go-opencv/opencv"
-)
+/*
+#cgo pkg-config: opencv
+#include <cv.h>
+#include <highgui.h>
+*/
+import "C"
+import "unsafe"
 
 func main() {
-	img := opencv.LoadImage("snow_leopard.jpg")
-	if img == nil {
-		log.Fatal("LoadImage failed")
-	}
-	defer img.Release()
+	filename := C.CString("snow_leopard.jpg")
+	defer C.free(unsafe.Pointer(filename))
 
-	cvhist.Calc()
+	C.cvNamedWindow(filename, 1)
+
+	img := unsafe.Pointer(C.cvLoadImage(filename, C.CV_LOAD_IMAGE_COLOR))
+	C.cvShowImage(filename, img)
+	C.cvWaitKey(0)
 }
