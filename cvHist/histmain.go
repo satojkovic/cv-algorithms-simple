@@ -9,7 +9,8 @@ import "C"
 import "unsafe"
 
 const (
-	FileName = "snow_leopard.jpg"
+	FileName   = "snow_leopard.jpg"
+	WindowName = "Histogram"
 )
 
 type Hist struct {
@@ -29,9 +30,10 @@ func (h *Hist) ShowHist(wn string) {
 	defer C.free(unsafe.Pointer(windowname))
 	C.cvShowImage(windowname, h.img)
 	C.cvWaitKey(0)
+	C.cvDestroyWindow(windowname)
 }
 
 func main() {
 	h, _ := CalcHist(FileName)
-	h.ShowHist("Histogram")
+	h.ShowHist(WindowName)
 }
