@@ -8,6 +8,10 @@ package main
 import "C"
 import "unsafe"
 
+const (
+	FileName = "snow_leopard.jpg"
+)
+
 type Hist struct {
 	img unsafe.Pointer
 }
@@ -28,7 +32,6 @@ func (h *Hist) ShowHist(wn string) {
 }
 
 func main() {
-	fn := "snow_leopard.jpg"
-	h, _ := CalcHist(fn)
+	h, _ := CalcHist(FileName)
 	h.ShowHist("Histogram")
 }
