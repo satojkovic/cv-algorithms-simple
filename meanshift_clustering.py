@@ -13,12 +13,9 @@ def main():
     img = cv2.imread('toy_in.png')
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     h, w, ch = img.shape
-    small_img = cv2.resize(img, (int(h/15.), int(w/15.)))
-    h, w = int(h/15.), int(w/15.)
-    print h, w
 
     # estimate bandwidth
-    flat_img = np.reshape(small_img, [-1, 3])
+    flat_img = np.reshape(img, [-1, 3])
     bandwidth = estimate_bandwidth(flat_img, n_samples=500)
 
     # mean shift clustering
