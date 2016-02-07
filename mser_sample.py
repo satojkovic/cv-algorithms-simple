@@ -10,7 +10,10 @@ def main():
     ms = cv2.MSER()
     msers = ms.detect(gray_img)
     for i in range(len(msers)):
-        cv2.drawContours(img, msers, i, cv2.cv.Scalar(i))
+        color = (np.random.randint(0, 256),
+                 np.random.randint(0, 256),
+                 np.random.randint(0, 256))
+        cv2.drawContours(img, msers, i, color)
     cv2.imshow('TEST', img)
     cv2.waitKey(0)
 
